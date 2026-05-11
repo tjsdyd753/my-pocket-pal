@@ -74,24 +74,32 @@ function Dashboard() {
           label="이번 달 소비"
           value={formatKRW(stats.monthSpend + stats.monthFixed)}
           tint="var(--expense)"
+          mode="spend"
+          txs={txs}
         />
         <StatCard
           icon={<PiggyBank className="size-4" />}
           label="총 적금"
           value={formatKRW(stats.totalSavings)}
           tint="var(--savings)"
+          mode="savings"
+          txs={txs}
         />
         <StatCard
           icon={<LineIcon className="size-4" />}
           label="총 투자"
           value={formatKRW(stats.totalInvestment)}
           tint="var(--investment)"
+          mode="investment"
+          txs={txs}
         />
         <StatCard
           icon={<TrendingUp className="size-4" />}
           label="이번 달 순익"
           value={formatKRW(stats.monthNet)}
           tint={stats.monthNet >= 0 ? "var(--income)" : "var(--expense)"}
+          mode="net"
+          txs={txs}
         />
       </section>
 
