@@ -1,5 +1,5 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
-import { useEffect, useMemo } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useAuth } from "@/hooks/use-auth";
 import { useTransactions, type Transaction } from "@/hooks/use-transactions";
 import { TYPE_META, formatKRW, type TxType } from "@/lib/finance";
@@ -187,6 +187,24 @@ function Dashboard() {
             <p className="p-8 text-center text-sm text-muted-foreground">아직 기록이 없어요. + 버튼으로 추가해보세요.</p>
           ) : (
             txs.slice(0, 8).map((t) => <TxRow key={t.id} tx={t} />)
+          )}
+        </div>
+      </section>
+
+      {/* FAB */}
+      <div className="fixed bottom-6 right-6 z-40">
+        <AddTransactionSheet />
+      </div>
+    </div>
+  );
+}
+
+function TxRowInner({ tx }: { tx: Transaction }) {
+  // placeholder — real component below
+  return null as unknown as JSX.Element;
+}
+{/* sentinel */}
+{/*
           )}
         </div>
       </section>
