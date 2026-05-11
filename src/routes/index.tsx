@@ -5,6 +5,7 @@ import { useTransactions, type Transaction } from "@/hooks/use-transactions";
 import { TYPE_META, formatKRW, type TxType } from "@/lib/finance";
 import { AddTransactionSheet } from "@/components/AddTransactionSheet";
 import { DailyCalendar } from "@/components/DailyCalendar";
+import { StatDetailDialog, type StatMode } from "@/components/StatDetailDialog";
 import { Button } from "@/components/ui/button";
 import { LogOut, TrendingUp, TrendingDown, PiggyBank, LineChart as LineIcon } from "lucide-react";
 import {
@@ -73,24 +74,32 @@ function Dashboard() {
           label="이번 달 소비"
           value={formatKRW(stats.monthSpend + stats.monthFixed)}
           tint="var(--expense)"
+          mode="spend"
+          txs={txs}
         />
         <StatCard
           icon={<PiggyBank className="size-4" />}
           label="총 적금"
           value={formatKRW(stats.totalSavings)}
           tint="var(--savings)"
+          mode="savings"
+          txs={txs}
         />
         <StatCard
           icon={<LineIcon className="size-4" />}
           label="총 투자"
           value={formatKRW(stats.totalInvestment)}
           tint="var(--investment)"
+          mode="investment"
+          txs={txs}
         />
         <StatCard
           icon={<TrendingUp className="size-4" />}
           label="이번 달 순익"
           value={formatKRW(stats.monthNet)}
           tint={stats.monthNet >= 0 ? "var(--income)" : "var(--expense)"}
+          mode="net"
+          txs={txs}
         />
       </section>
 
@@ -224,15 +233,38 @@ function Dashboard() {
 }
 
 
-function StatCard({ icon, label, value, tint }: { icon: React.ReactNode; label: string; value: string; tint: string }) {
+function StatCard({
+  icon, label, value, tint, mode, txs,
+}: {
+  icon: React.ReactNode;
+  label: string;
+  value: string;
+  tint: string;
+  mode: StatMode;
+  txs: Transaction[];
+}) {
+  const [open, setOpen] = useState(false);
   return (
-    <div className="glass-card p-4">
-      <div className="flex items-center gap-2 text-muted-foreground text-xs">
-        <span style={{ color: tint }}>{icon}</span>
-        {label}
-      </div>
-      <p className="text-lg font-semibold mt-1.5 tabular-nums">{value}</p>
-    </div>
+    <>
+      <button
+        type="button"
+        onClick={() => setOpen(true)}
+        className="glass-card p-4 text-left transition-transform active:scale-[0.98] hover:bg-accent/30"
+      >
+        <div className="flex items-center gap-2 text-muted-foreground text-xs">
+          <span style={{ color: tint }}>{icon}</span>
+          {label}
+        </div>
+        <p className="text-lg font-semibold mt-1.5 tabular-nums">{value}</p>
+      </button>
+      <StatDetailDialog
+        open={open}
+        onOpenChange={setOpen}
+        mode={mode}
+        title={label}
+        txs={txs}
+      />
+    </>
   );
 }
 
