@@ -1,5 +1,5 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
-import { useEffect, useMemo } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useAuth } from "@/hooks/use-auth";
 import { useTransactions, type Transaction } from "@/hooks/use-transactions";
 import { TYPE_META, formatKRW, type TxType } from "@/lib/finance";
@@ -199,6 +199,7 @@ function Dashboard() {
   );
 }
 
+
 function StatCard({ icon, label, value, tint }: { icon: React.ReactNode; label: string; value: string; tint: string }) {
   return (
     <div className="glass-card p-4">
@@ -212,19 +213,27 @@ function StatCard({ icon, label, value, tint }: { icon: React.ReactNode; label: 
 }
 
 function TxRow({ tx }: { tx: Transaction }) {
+  const [open, setOpen] = useState(false);
   const m = TYPE_META[tx.type];
   const sign = tx.type === "income" ? "+" : tx.type === "expense" || tx.type === "fixed_cost" ? "-" : "";
   return (
-    <div className="flex items-center gap-3 px-5 py-3.5">
-      <div className="size-10 rounded-full bg-accent flex items-center justify-center text-base">{m.emoji}</div>
-      <div className="flex-1 min-w-0">
-        <p className="text-sm font-medium truncate">{tx.category}</p>
-        <p className="text-xs text-muted-foreground truncate">{tx.memo || m.label} · {tx.occurred_on.slice(5)}</p>
-      </div>
-      <p className="text-sm font-semibold tabular-nums" style={{ color: m.color }}>
-        {sign}{formatKRW(tx.amount)}
-      </p>
-    </div>
+    <>
+      <button
+        type="button"
+        onClick={() => setOpen(true)}
+        className="w-full flex items-center gap-3 px-5 py-3.5 text-left hover:bg-accent/40 transition-colors"
+      >
+        <div className="size-10 rounded-full bg-accent flex items-center justify-center text-base">{m.emoji}</div>
+        <div className="flex-1 min-w-0">
+          <p className="text-sm font-medium truncate">{tx.category}</p>
+          <p className="text-xs text-muted-foreground truncate">{tx.memo || m.label} · {tx.occurred_on.slice(5)}</p>
+        </div>
+        <p className="text-sm font-semibold tabular-nums" style={{ color: m.color }}>
+          {sign}{formatKRW(tx.amount)}
+        </p>
+      </button>
+      <AddTransactionSheet transaction={tx} open={open} onOpenChange={setOpen} trigger={null} />
+    </>
   );
 }
 
