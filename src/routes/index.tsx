@@ -120,7 +120,16 @@ function Dashboard() {
                     }}
                     formatter={(v: number) => formatKRW(v)}
                   />
-                  <Area type="monotone" dataKey="net" stroke="var(--color-primary)" strokeWidth={2} fill="url(#g1)" />
+                  <Area
+                    type="monotone"
+                    dataKey="net"
+                    stroke="var(--color-primary)"
+                    strokeWidth={2}
+                    fill="url(#g1)"
+                    isAnimationActive
+                    animationDuration={700}
+                    animationEasing="ease-out"
+                  />
                 </AreaChart>
               </ResponsiveContainer>
             ) : (
@@ -144,6 +153,9 @@ function Dashboard() {
                       outerRadius={75}
                       paddingAngle={2}
                       stroke="none"
+                      isAnimationActive
+                      animationDuration={600}
+                      animationEasing="ease-out"
                     >
                       {stats.categoryPie.map((_, i) => (
                         <Cell key={i} fill={pieColor(i)} />
@@ -160,12 +172,18 @@ function Dashboard() {
                     />
                   </PieChart>
                 </ResponsiveContainer>
-                <ul className="flex-1 space-y-1.5 text-xs">
+                <ul
+                  key={stats.categoryPie.map((c) => `${c.name}:${c.value}`).join("|")}
+                  className="flex-1 space-y-1.5 text-xs animate-fade-in"
+                >
                   {stats.categoryPie.slice(0, 6).map((c, i) => (
-                    <li key={c.name} className="flex items-center gap-2">
+                    <li
+                      key={c.name}
+                      className="flex items-center gap-2 transition-colors duration-300"
+                    >
                       <span className="size-2 rounded-full" style={{ background: pieColor(i) }} />
                       <span className="text-muted-foreground flex-1 truncate">{c.name}</span>
-                      <span className="font-medium">{Math.round((c.value / stats.monthSpend) * 100) || 0}%</span>
+                      <span className="font-medium tabular-nums">{Math.round((c.value / stats.monthSpend) * 100) || 0}%</span>
                     </li>
                   ))}
                 </ul>
