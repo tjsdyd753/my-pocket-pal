@@ -1,5 +1,5 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useAuth } from "@/hooks/use-auth";
 import { useTransactions, type Transaction } from "@/hooks/use-transactions";
 import { TYPE_META, formatKRW, type TxType } from "@/lib/finance";
@@ -214,11 +214,13 @@ function StatCard({ icon, label, value, tint }: { icon: React.ReactNode; label: 
 
 function TxRow({ tx }: { tx: Transaction }) {
   const [open, setOpen] = useState(false);
+  const btnRef = useRef<HTMLButtonElement>(null);
   const m = TYPE_META[tx.type];
   const sign = tx.type === "income" ? "+" : tx.type === "expense" || tx.type === "fixed_cost" ? "-" : "";
   return (
     <>
       <button
+        ref={btnRef}
         type="button"
         onClick={() => setOpen(true)}
         className="w-full flex items-center gap-3 px-5 py-3.5 text-left hover:bg-accent/40 transition-colors"
@@ -232,7 +234,18 @@ function TxRow({ tx }: { tx: Transaction }) {
           {sign}{formatKRW(tx.amount)}
         </p>
       </button>
-      <AddTransactionSheet transaction={tx} open={open} onOpenChange={setOpen} trigger={null} />
+      <AddTransactionSheet
+        transaction={tx}
+        open={open}
+        onOpenChange={(v) => {
+          setOpen(v);
+          if (!v) {
+            // restore focus to the row after the sheet closes
+            requestAnimationFrame(() => btnRef.current?.focus({ preventScroll: true }));
+          }
+        }}
+        trigger={null}
+      />
     </>
   );
 }

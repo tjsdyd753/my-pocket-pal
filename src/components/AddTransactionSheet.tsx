@@ -103,10 +103,13 @@ export function AddTransactionSheet({ trigger, transaction, open: openProp, onOp
     const { error } = isEdit
       ? await supabase.from("transactions").update(payload).eq("id", transaction!.id)
       : await supabase.from("transactions").insert({ ...payload, user_id: user.id });
+    if (error) {
+      setBusy(false);
+      return toast.error(error.message);
+    }
+    await qc.invalidateQueries({ queryKey: ["transactions"], refetchType: "active" });
     setBusy(false);
-    if (error) return toast.error(error.message);
     toast.success(isEdit ? "수정되었습니다" : "기록되었습니다");
-    qc.invalidateQueries({ queryKey: ["transactions"] });
     if (!isEdit) reset();
     setOpen(false);
   };
@@ -115,10 +118,13 @@ export function AddTransactionSheet({ trigger, transaction, open: openProp, onOp
     if (!transaction) return;
     setBusy(true);
     const { error } = await supabase.from("transactions").delete().eq("id", transaction.id);
+    if (error) {
+      setBusy(false);
+      return toast.error(error.message);
+    }
+    await qc.invalidateQueries({ queryKey: ["transactions"], refetchType: "active" });
     setBusy(false);
-    if (error) return toast.error(error.message);
     toast.success("삭제되었습니다");
-    qc.invalidateQueries({ queryKey: ["transactions"] });
     setOpen(false);
   };
 
