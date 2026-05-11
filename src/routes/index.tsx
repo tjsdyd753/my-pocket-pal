@@ -330,7 +330,6 @@ function computeStats(txs: Transaction[]) {
       const a = Number(t.amount);
       if (t.type === "income") net += a;
       else if (t.type === "expense" || t.type === "fixed_cost") net -= a;
-      else net += a;
     }
     return { label, net };
   });
