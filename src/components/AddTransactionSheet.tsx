@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import {
   Sheet,
   SheetContent,
@@ -18,26 +18,63 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Plus } from "lucide-react";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
+import { Plus, Trash2 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/use-auth";
 import { CATEGORIES, TYPE_META, type TxType } from "@/lib/finance";
 import { useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
+import type { Transaction } from "@/hooks/use-transactions";
 
 const TYPES: TxType[] = ["expense", "income", "savings", "investment", "fixed_cost"];
 
-export function AddTransactionSheet({ trigger }: { trigger?: React.ReactNode }) {
+type Props = {
+  trigger?: React.ReactNode;
+  transaction?: Transaction;
+  open?: boolean;
+  onOpenChange?: (open: boolean) => void;
+};
+
+export function AddTransactionSheet({ trigger, transaction, open: openProp, onOpenChange }: Props) {
   const { user } = useAuth();
   const qc = useQueryClient();
-  const [open, setOpen] = useState(false);
-  const [type, setType] = useState<TxType>("expense");
-  const [category, setCategory] = useState(CATEGORIES.expense[0]);
-  const [amount, setAmount] = useState("");
-  const [memo, setMemo] = useState("");
-  const [date, setDate] = useState(new Date().toISOString().slice(0, 10));
+  const [openInternal, setOpenInternal] = useState(false);
+  const open = openProp ?? openInternal;
+  const setOpen = (v: boolean) => {
+    onOpenChange?.(v);
+    if (openProp === undefined) setOpenInternal(v);
+  };
+  const isEdit = !!transaction;
+
+  const [type, setType] = useState<TxType>(transaction?.type ?? "expense");
+  const [category, setCategory] = useState(transaction?.category ?? CATEGORIES.expense[0]);
+  const [amount, setAmount] = useState(transaction ? String(transaction.amount) : "");
+  const [memo, setMemo] = useState(transaction?.memo ?? "");
+  const [date, setDate] = useState(transaction?.occurred_on ?? new Date().toISOString().slice(0, 10));
   const [busy, setBusy] = useState(false);
+
+  // re-sync when opening with a different transaction
+  useEffect(() => {
+    if (open && transaction) {
+      setType(transaction.type);
+      setCategory(transaction.category);
+      setAmount(String(transaction.amount));
+      setMemo(transaction.memo ?? "");
+      setDate(transaction.occurred_on);
+    }
+  }, [open, transaction]);
 
   const reset = () => {
     setType("expense");
@@ -56,35 +93,52 @@ export function AddTransactionSheet({ trigger }: { trigger?: React.ReactNode }) 
       return;
     }
     setBusy(true);
-    const { error } = await supabase.from("transactions").insert({
-      user_id: user.id,
+    const payload = {
       type,
       category,
       amount: amt,
       memo: memo || null,
       occurred_on: date,
-    });
+    };
+    const { error } = isEdit
+      ? await supabase.from("transactions").update(payload).eq("id", transaction!.id)
+      : await supabase.from("transactions").insert({ ...payload, user_id: user.id });
     setBusy(false);
     if (error) return toast.error(error.message);
-    toast.success("기록되었습니다");
+    toast.success(isEdit ? "수정되었습니다" : "기록되었습니다");
     qc.invalidateQueries({ queryKey: ["transactions"] });
-    reset();
+    if (!isEdit) reset();
+    setOpen(false);
+  };
+
+  const remove = async () => {
+    if (!transaction) return;
+    setBusy(true);
+    const { error } = await supabase.from("transactions").delete().eq("id", transaction.id);
+    setBusy(false);
+    if (error) return toast.error(error.message);
+    toast.success("삭제되었습니다");
+    qc.invalidateQueries({ queryKey: ["transactions"] });
     setOpen(false);
   };
 
   return (
     <Sheet open={open} onOpenChange={setOpen}>
-      <SheetTrigger asChild>
-        {trigger ?? (
-          <Button size="lg" className="rounded-full size-14 p-0 shadow-lg">
-            <Plus className="size-6" />
-          </Button>
-        )}
-      </SheetTrigger>
+      {trigger !== null && (
+        <SheetTrigger asChild>
+          {trigger ?? (
+            <Button size="lg" className="rounded-full size-14 p-0 shadow-lg">
+              <Plus className="size-6" />
+            </Button>
+          )}
+        </SheetTrigger>
+      )}
       <SheetContent side="bottom" className="rounded-t-3xl max-h-[90vh] overflow-y-auto">
         <SheetHeader className="text-left">
-          <SheetTitle>새 기록</SheetTitle>
-          <SheetDescription>오늘의 자산 흐름을 추가하세요</SheetDescription>
+          <SheetTitle>{isEdit ? "기록 수정" : "새 기록"}</SheetTitle>
+          <SheetDescription>
+            {isEdit ? "내용을 수정하거나 삭제할 수 있어요" : "오늘의 자산 흐름을 추가하세요"}
+          </SheetDescription>
         </SheetHeader>
 
         <form onSubmit={submit} className="space-y-5 mt-6 px-4 pb-8">
@@ -149,9 +203,30 @@ export function AddTransactionSheet({ trigger }: { trigger?: React.ReactNode }) 
             <Textarea rows={2} value={memo} onChange={(e) => setMemo(e.target.value)} />
           </div>
 
-          <Button type="submit" className="w-full h-12" disabled={busy}>
-            {busy ? "저장중..." : "저장"}
-          </Button>
+          <div className="flex gap-2">
+            {isEdit && (
+              <AlertDialog>
+                <AlertDialogTrigger asChild>
+                  <Button type="button" variant="outline" className="h-12 px-4" disabled={busy}>
+                    <Trash2 className="size-4" />
+                  </Button>
+                </AlertDialogTrigger>
+                <AlertDialogContent>
+                  <AlertDialogHeader>
+                    <AlertDialogTitle>이 기록을 삭제할까요?</AlertDialogTitle>
+                    <AlertDialogDescription>이 작업은 되돌릴 수 없습니다.</AlertDialogDescription>
+                  </AlertDialogHeader>
+                  <AlertDialogFooter>
+                    <AlertDialogCancel>취소</AlertDialogCancel>
+                    <AlertDialogAction onClick={remove}>삭제</AlertDialogAction>
+                  </AlertDialogFooter>
+                </AlertDialogContent>
+              </AlertDialog>
+            )}
+            <Button type="submit" className="flex-1 h-12" disabled={busy}>
+              {busy ? "저장중..." : isEdit ? "수정 저장" : "저장"}
+            </Button>
+          </div>
         </form>
       </SheetContent>
     </Sheet>
