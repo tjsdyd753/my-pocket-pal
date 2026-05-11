@@ -196,6 +196,11 @@ function Dashboard() {
         </div>
       </section>
 
+      {/* Calendar */}
+      <section className="px-6 mt-3">
+        <DailyCalendar txs={txs} />
+      </section>
+
       {/* Recent */}
       <section className="px-6 mt-6">
         <h3 className="text-sm font-medium mb-3">최근 내역</h3>
