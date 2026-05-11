@@ -313,7 +313,7 @@ function computeStats(txs: Transaction[]) {
     }
   }
 
-  const netAsset = totalIncome - totalSpend - totalFixed + totalSavings + totalInvestment;
+  const netAsset = totalIncome - totalSpend - totalFixed;
   const monthNet = monthIncome - monthSpend - monthFixed;
 
   // last 6 months series (cumulative net)
