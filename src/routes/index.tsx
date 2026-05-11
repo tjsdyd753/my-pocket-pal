@@ -5,6 +5,7 @@ import { useTransactions, type Transaction } from "@/hooks/use-transactions";
 import { TYPE_META, formatKRW, type TxType } from "@/lib/finance";
 import { AddTransactionSheet } from "@/components/AddTransactionSheet";
 import { DailyCalendar } from "@/components/DailyCalendar";
+import { StatDetailDialog, type StatMode } from "@/components/StatDetailDialog";
 import { Button } from "@/components/ui/button";
 import { LogOut, TrendingUp, TrendingDown, PiggyBank, LineChart as LineIcon } from "lucide-react";
 import {
