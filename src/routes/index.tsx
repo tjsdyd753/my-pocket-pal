@@ -233,15 +233,38 @@ function Dashboard() {
 }
 
 
-function StatCard({ icon, label, value, tint }: { icon: React.ReactNode; label: string; value: string; tint: string }) {
+function StatCard({
+  icon, label, value, tint, mode, txs,
+}: {
+  icon: React.ReactNode;
+  label: string;
+  value: string;
+  tint: string;
+  mode: StatMode;
+  txs: Transaction[];
+}) {
+  const [open, setOpen] = useState(false);
   return (
-    <div className="glass-card p-4">
-      <div className="flex items-center gap-2 text-muted-foreground text-xs">
-        <span style={{ color: tint }}>{icon}</span>
-        {label}
-      </div>
-      <p className="text-lg font-semibold mt-1.5 tabular-nums">{value}</p>
-    </div>
+    <>
+      <button
+        type="button"
+        onClick={() => setOpen(true)}
+        className="glass-card p-4 text-left transition-transform active:scale-[0.98] hover:bg-accent/30"
+      >
+        <div className="flex items-center gap-2 text-muted-foreground text-xs">
+          <span style={{ color: tint }}>{icon}</span>
+          {label}
+        </div>
+        <p className="text-lg font-semibold mt-1.5 tabular-nums">{value}</p>
+      </button>
+      <StatDetailDialog
+        open={open}
+        onOpenChange={setOpen}
+        mode={mode}
+        title={label}
+        txs={txs}
+      />
+    </>
   );
 }
 
