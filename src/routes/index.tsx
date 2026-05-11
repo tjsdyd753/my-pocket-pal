@@ -199,23 +199,6 @@ function Dashboard() {
   );
 }
 
-function TxRowInner({ tx }: { tx: Transaction }) {
-  // placeholder — real component below
-  return null as unknown as JSX.Element;
-}
-{/* sentinel */}
-{/*
-          )}
-        </div>
-      </section>
-
-      {/* FAB */}
-      <div className="fixed bottom-6 right-6 z-40">
-        <AddTransactionSheet />
-      </div>
-    </div>
-  );
-}
 
 function StatCard({ icon, label, value, tint }: { icon: React.ReactNode; label: string; value: string; tint: string }) {
   return (
