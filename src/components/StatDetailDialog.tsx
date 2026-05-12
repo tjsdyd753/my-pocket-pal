@@ -213,41 +213,59 @@ function Buckets({
   mode,
   fmt,
   emptyText,
+  selectedKey,
+  onSelect,
 }: {
   items: { key: string; label: string; value: number }[];
   mode: StatMode;
   fmt: (v: number) => string;
   emptyText: string;
+  selectedKey?: string | null;
+  onSelect?: (key: string) => void;
 }) {
   if (items.length === 0) {
     return <p className="text-center text-sm text-muted-foreground py-8">{emptyText}</p>;
   }
   const max = Math.max(...items.map((i) => Math.abs(i.value)), 1);
+  const clickable = !!onSelect;
   return (
     <ScrollArea className="h-[42vh] pr-2">
       <ul className="space-y-2">
-        {items.map((i) => (
-          <li key={i.key} className="space-y-1">
-            <div className="flex items-baseline justify-between text-sm">
-              <span className="text-muted-foreground">{i.label}</span>
-              <span
-                className="font-semibold tabular-nums"
-                style={{ color: tintFor(mode, i.value) }}
+        {items.map((i) => {
+          const isSelected = selectedKey === i.key;
+          const Tag: any = clickable ? "button" : "div";
+          return (
+            <li key={i.key}>
+              <Tag
+                {...(clickable
+                  ? { type: "button", onClick: () => onSelect?.(i.key) }
+                  : {})}
+                className={`w-full text-left space-y-1 rounded-lg px-2 py-1.5 transition-colors ${
+                  clickable ? "hover:bg-accent/40" : ""
+                } ${isSelected ? "bg-accent/60 ring-1 ring-border" : ""}`}
               >
-                {fmt(i.value)}
-              </span>
-            </div>
-            <div className="h-1.5 rounded-full bg-accent/60 overflow-hidden">
-              <div
-                className="h-full rounded-full transition-all duration-500"
-                style={{
-                  width: `${(Math.abs(i.value) / max) * 100}%`,
-                  background: tintFor(mode, i.value),
-                }}
-              />
-            </div>
-          </li>
-        ))}
+                <div className="flex items-baseline justify-between text-sm">
+                  <span className="text-muted-foreground">{i.label}</span>
+                  <span
+                    className="font-semibold tabular-nums"
+                    style={{ color: tintFor(mode, i.value) }}
+                  >
+                    {fmt(i.value)}
+                  </span>
+                </div>
+                <div className="h-1.5 rounded-full bg-accent/60 overflow-hidden">
+                  <div
+                    className="h-full rounded-full transition-all duration-500"
+                    style={{
+                      width: `${(Math.abs(i.value) / max) * 100}%`,
+                      background: tintFor(mode, i.value),
+                    }}
+                  />
+                </div>
+              </Tag>
+            </li>
+          );
+        })}
       </ul>
     </ScrollArea>
   );
