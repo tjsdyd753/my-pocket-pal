@@ -40,6 +40,15 @@ import type { Transaction } from "@/hooks/use-transactions";
 
 const TYPES: TxType[] = ["expense", "income", "savings", "investment", "fixed_cost"];
 
+// 사용자 로컬 타임존 기준 오늘 날짜(YYYY-MM-DD)
+const todayLocal = () => {
+  const d = new Date();
+  const y = d.getFullYear();
+  const m = String(d.getMonth() + 1).padStart(2, "0");
+  const day = String(d.getDate()).padStart(2, "0");
+  return `${y}-${m}-${day}`;
+};
+
 type Props = {
   trigger?: React.ReactNode;
   transaction?: Transaction;
