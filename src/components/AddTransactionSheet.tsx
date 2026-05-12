@@ -62,7 +62,7 @@ export function AddTransactionSheet({ trigger, transaction, open: openProp, onOp
   const [category, setCategory] = useState(transaction?.category ?? CATEGORIES.expense[0]);
   const [amount, setAmount] = useState(transaction ? String(transaction.amount) : "");
   const [memo, setMemo] = useState(transaction?.memo ?? "");
-  const [date, setDate] = useState(transaction?.occurred_on ?? new Date().toISOString().slice(0, 10));
+  const [date, setDate] = useState(transaction?.occurred_on ?? todayLocal());
   const [busy, setBusy] = useState(false);
 
   // re-sync when opening
