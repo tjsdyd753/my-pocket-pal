@@ -126,57 +126,57 @@ export function StatDetailDialog({ open, onOpenChange, mode, title, txs }: Props
         </div>
 
         <Tabs defaultValue="daily" className="flex-1 flex flex-col min-h-0">
-          <TabsList className="grid grid-cols-4">
+          <TabsList className="grid grid-cols-3">
             <TabsTrigger value="daily">일별</TabsTrigger>
             <TabsTrigger value="monthly">월별</TabsTrigger>
             <TabsTrigger value="yearly">년도별</TabsTrigger>
-            <TabsTrigger value="list">리스트</TabsTrigger>
           </TabsList>
 
-          <TabsContent value="daily" className="flex-1 min-h-0 mt-3">
+          <TabsContent value="daily" className="flex-1 min-h-0 mt-3 space-y-4">
             <Buckets items={daily} mode={mode} fmt={fmt} emptyText="이번 달 기록이 없어요" />
+            <div className="pt-2 border-t">
+              <p className="text-xs text-muted-foreground mb-2">전체 내역</p>
+              <ScrollArea className="h-[28vh] pr-2">
+                {list.length === 0 ? (
+                  <p className="text-center text-sm text-muted-foreground py-8">기록이 없어요</p>
+                ) : (
+                  <ul className="space-y-1">
+                    {list.map((t) => {
+                      const meta = TYPE_META[t.type];
+                      const v = signedAmount(t, mode);
+                      return (
+                        <li
+                          key={t.id}
+                          className="flex items-center gap-3 px-2 py-2 rounded-lg hover:bg-accent/40"
+                        >
+                          <div className="size-8 rounded-full bg-accent flex items-center justify-center text-sm">
+                            {meta.emoji}
+                          </div>
+                          <div className="flex-1 min-w-0">
+                            <p className="text-sm font-medium truncate">{t.category}</p>
+                            <p className="text-xs text-muted-foreground truncate">
+                              {t.memo || meta.label} · {t.occurred_on}
+                            </p>
+                          </div>
+                          <p
+                            className="text-sm font-semibold tabular-nums"
+                            style={{ color: tintFor(mode, v) }}
+                          >
+                            {fmt(v)}
+                          </p>
+                        </li>
+                      );
+                    })}
+                  </ul>
+                )}
+              </ScrollArea>
+            </div>
           </TabsContent>
           <TabsContent value="monthly" className="flex-1 min-h-0 mt-3">
             <Buckets items={monthly} mode={mode} fmt={fmt} emptyText="올해 기록이 없어요" />
           </TabsContent>
           <TabsContent value="yearly" className="flex-1 min-h-0 mt-3">
             <Buckets items={yearly} mode={mode} fmt={fmt} emptyText="기록이 없어요" />
-          </TabsContent>
-          <TabsContent value="list" className="flex-1 min-h-0 mt-3">
-            <ScrollArea className="h-[42vh] pr-2">
-              {list.length === 0 ? (
-                <p className="text-center text-sm text-muted-foreground py-8">기록이 없어요</p>
-              ) : (
-                <ul className="space-y-1">
-                  {list.map((t) => {
-                    const meta = TYPE_META[t.type];
-                    const v = signedAmount(t, mode);
-                    return (
-                      <li
-                        key={t.id}
-                        className="flex items-center gap-3 px-2 py-2 rounded-lg hover:bg-accent/40"
-                      >
-                        <div className="size-8 rounded-full bg-accent flex items-center justify-center text-sm">
-                          {meta.emoji}
-                        </div>
-                        <div className="flex-1 min-w-0">
-                          <p className="text-sm font-medium truncate">{t.category}</p>
-                          <p className="text-xs text-muted-foreground truncate">
-                            {t.memo || meta.label} · {t.occurred_on}
-                          </p>
-                        </div>
-                        <p
-                          className="text-sm font-semibold tabular-nums"
-                          style={{ color: tintFor(mode, v) }}
-                        >
-                          {fmt(v)}
-                        </p>
-                      </li>
-                    );
-                  })}
-                </ul>
-              )}
-            </ScrollArea>
           </TabsContent>
         </Tabs>
       </DialogContent>

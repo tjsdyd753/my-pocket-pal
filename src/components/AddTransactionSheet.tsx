@@ -40,6 +40,15 @@ import type { Transaction } from "@/hooks/use-transactions";
 
 const TYPES: TxType[] = ["expense", "income", "savings", "investment", "fixed_cost"];
 
+// 사용자 로컬 타임존 기준 오늘 날짜(YYYY-MM-DD)
+const todayLocal = () => {
+  const d = new Date();
+  const y = d.getFullYear();
+  const m = String(d.getMonth() + 1).padStart(2, "0");
+  const day = String(d.getDate()).padStart(2, "0");
+  return `${y}-${m}-${day}`;
+};
+
 type Props = {
   trigger?: React.ReactNode;
   transaction?: Transaction;
@@ -62,7 +71,7 @@ export function AddTransactionSheet({ trigger, transaction, open: openProp, onOp
   const [category, setCategory] = useState(transaction?.category ?? CATEGORIES.expense[0]);
   const [amount, setAmount] = useState(transaction ? String(transaction.amount) : "");
   const [memo, setMemo] = useState(transaction?.memo ?? "");
-  const [date, setDate] = useState(transaction?.occurred_on ?? new Date().toISOString().slice(0, 10));
+  const [date, setDate] = useState(transaction?.occurred_on ?? todayLocal());
   const [busy, setBusy] = useState(false);
 
   // re-sync when opening
@@ -76,7 +85,7 @@ export function AddTransactionSheet({ trigger, transaction, open: openProp, onOp
       setDate(transaction.occurred_on);
     } else {
       // always default new entries to today
-      setDate(new Date().toISOString().slice(0, 10));
+      setDate(todayLocal());
     }
   }, [open, transaction]);
 
@@ -85,7 +94,7 @@ export function AddTransactionSheet({ trigger, transaction, open: openProp, onOp
     setCategory(CATEGORIES.expense[0]);
     setAmount("");
     setMemo("");
-    setDate(new Date().toISOString().slice(0, 10));
+    setDate(todayLocal());
   };
 
   const submit = async (e: React.FormEvent) => {
