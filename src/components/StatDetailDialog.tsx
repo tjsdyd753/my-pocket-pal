@@ -137,9 +137,29 @@ export function StatDetailDialog({ open, onOpenChange, mode, title, txs }: Props
           </TabsList>
 
           <TabsContent value="daily" className="flex-1 min-h-0 mt-3 space-y-4">
-            <Buckets items={daily} mode={mode} fmt={fmt} emptyText="이번 달 기록이 없어요" />
+            <Buckets
+              items={daily}
+              mode={mode}
+              fmt={fmt}
+              emptyText="이번 달 기록이 없어요"
+              selectedKey={selectedDay}
+              onSelect={(k) => setSelectedDay((cur) => (cur === k ? null : k))}
+            />
             <div className="pt-2 border-t">
-              <p className="text-xs text-muted-foreground mb-2">전체 내역</p>
+              <div className="flex items-center justify-between mb-2">
+                <p className="text-xs text-muted-foreground">
+                  {selectedDay ? `${Number(selectedDay.slice(8))}일 내역` : "전체 내역"}
+                </p>
+                {selectedDay && (
+                  <button
+                    type="button"
+                    onClick={() => setSelectedDay(null)}
+                    className="text-xs text-muted-foreground hover:text-foreground"
+                  >
+                    전체 보기
+                  </button>
+                )}
+              </div>
               <ScrollArea className="h-[28vh] pr-2">
                 {list.length === 0 ? (
                   <p className="text-center text-sm text-muted-foreground py-8">기록이 없어요</p>
