@@ -1,4 +1,4 @@
-import { useMemo } from "react";
+import { useMemo, useState } from "react";
 import {
   Dialog,
   DialogContent,
@@ -99,10 +99,14 @@ export function StatDetailDialog({ open, onOpenChange, mode, title, txs }: Props
       .map(([k, value]) => ({ key: k, label: `${k}년`, value }));
   }, [filtered, mode]);
 
-  const list = useMemo(
-    () => [...filtered].sort((a, b) => b.occurred_on.localeCompare(a.occurred_on)),
-    [filtered]
-  );
+  const [selectedDay, setSelectedDay] = useState<string | null>(null);
+
+  const list = useMemo(() => {
+    const base = selectedDay
+      ? filtered.filter((t) => t.occurred_on === selectedDay)
+      : filtered;
+    return [...base].sort((a, b) => b.occurred_on.localeCompare(a.occurred_on));
+  }, [filtered, selectedDay]);
 
   const sign = (v: number) => (mode === "net" ? (v >= 0 ? "+" : "-") : mode === "savings" || mode === "investment" ? "" : "-");
   const fmt = (v: number) => `${sign(v)}${formatKRW(Math.abs(v))}`;
@@ -133,9 +137,29 @@ export function StatDetailDialog({ open, onOpenChange, mode, title, txs }: Props
           </TabsList>
 
           <TabsContent value="daily" className="flex-1 min-h-0 mt-3 space-y-4">
-            <Buckets items={daily} mode={mode} fmt={fmt} emptyText="이번 달 기록이 없어요" />
+            <Buckets
+              items={daily}
+              mode={mode}
+              fmt={fmt}
+              emptyText="이번 달 기록이 없어요"
+              selectedKey={selectedDay}
+              onSelect={(k) => setSelectedDay((cur) => (cur === k ? null : k))}
+            />
             <div className="pt-2 border-t">
-              <p className="text-xs text-muted-foreground mb-2">전체 내역</p>
+              <div className="flex items-center justify-between mb-2">
+                <p className="text-xs text-muted-foreground">
+                  {selectedDay ? `${Number(selectedDay.slice(8))}일 내역` : "전체 내역"}
+                </p>
+                {selectedDay && (
+                  <button
+                    type="button"
+                    onClick={() => setSelectedDay(null)}
+                    className="text-xs text-muted-foreground hover:text-foreground"
+                  >
+                    전체 보기
+                  </button>
+                )}
+              </div>
               <ScrollArea className="h-[28vh] pr-2">
                 {list.length === 0 ? (
                   <p className="text-center text-sm text-muted-foreground py-8">기록이 없어요</p>
@@ -189,41 +213,59 @@ function Buckets({
   mode,
   fmt,
   emptyText,
+  selectedKey,
+  onSelect,
 }: {
   items: { key: string; label: string; value: number }[];
   mode: StatMode;
   fmt: (v: number) => string;
   emptyText: string;
+  selectedKey?: string | null;
+  onSelect?: (key: string) => void;
 }) {
   if (items.length === 0) {
     return <p className="text-center text-sm text-muted-foreground py-8">{emptyText}</p>;
   }
   const max = Math.max(...items.map((i) => Math.abs(i.value)), 1);
+  const clickable = !!onSelect;
   return (
     <ScrollArea className="h-[42vh] pr-2">
       <ul className="space-y-2">
-        {items.map((i) => (
-          <li key={i.key} className="space-y-1">
-            <div className="flex items-baseline justify-between text-sm">
-              <span className="text-muted-foreground">{i.label}</span>
-              <span
-                className="font-semibold tabular-nums"
-                style={{ color: tintFor(mode, i.value) }}
+        {items.map((i) => {
+          const isSelected = selectedKey === i.key;
+          const Tag: any = clickable ? "button" : "div";
+          return (
+            <li key={i.key}>
+              <Tag
+                {...(clickable
+                  ? { type: "button", onClick: () => onSelect?.(i.key) }
+                  : {})}
+                className={`w-full text-left space-y-1 rounded-lg px-2 py-1.5 transition-colors ${
+                  clickable ? "hover:bg-accent/40" : ""
+                } ${isSelected ? "bg-accent/60 ring-1 ring-border" : ""}`}
               >
-                {fmt(i.value)}
-              </span>
-            </div>
-            <div className="h-1.5 rounded-full bg-accent/60 overflow-hidden">
-              <div
-                className="h-full rounded-full transition-all duration-500"
-                style={{
-                  width: `${(Math.abs(i.value) / max) * 100}%`,
-                  background: tintFor(mode, i.value),
-                }}
-              />
-            </div>
-          </li>
-        ))}
+                <div className="flex items-baseline justify-between text-sm">
+                  <span className="text-muted-foreground">{i.label}</span>
+                  <span
+                    className="font-semibold tabular-nums"
+                    style={{ color: tintFor(mode, i.value) }}
+                  >
+                    {fmt(i.value)}
+                  </span>
+                </div>
+                <div className="h-1.5 rounded-full bg-accent/60 overflow-hidden">
+                  <div
+                    className="h-full rounded-full transition-all duration-500"
+                    style={{
+                      width: `${(Math.abs(i.value) / max) * 100}%`,
+                      background: tintFor(mode, i.value),
+                    }}
+                  />
+                </div>
+              </Tag>
+            </li>
+          );
+        })}
       </ul>
     </ScrollArea>
   );
