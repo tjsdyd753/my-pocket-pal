@@ -1,4 +1,5 @@
 import { useMemo, useState } from "react";
+import { ChevronRight } from "lucide-react";
 import {
   Dialog,
   DialogContent,
@@ -6,7 +7,6 @@ import {
   DialogTitle,
   DialogDescription,
 } from "@/components/ui/dialog";
-import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { TYPE_META, formatKRW, type TxType } from "@/lib/finance";
 import type { Transaction } from "@/hooks/use-transactions";
@@ -45,6 +45,10 @@ const tintFor = (mode: StatMode, value: number) => {
   return value >= 0 ? "var(--income)" : "var(--expense)";
 };
 
+type DayNode = { key: string; day: number; total: number };
+type MonthNode = { key: string; month: number; total: number; days: DayNode[] };
+type YearNode = { key: string; year: number; total: number; months: MonthNode[] };
+
 export function StatDetailDialog({ open, onOpenChange, mode, title, txs }: Props) {
   const filtered = useMemo(
     () => txs.filter((t) => MODE_TYPES[mode].includes(t.type)),
@@ -56,59 +60,57 @@ export function StatDetailDialog({ open, onOpenChange, mode, title, txs }: Props
     [filtered, mode]
   );
 
-  const now = new Date();
-  const curYear = now.getFullYear();
-  const curMonth = now.getMonth();
-
-  // 일별 — 이번 달
-  const daily = useMemo(() => {
-    const map = new Map<string, number>();
-    for (const t of filtered) {
-      const [y, m] = t.occurred_on.split("-").map(Number);
-      if (y !== curYear || m - 1 !== curMonth) continue;
-      map.set(t.occurred_on, (map.get(t.occurred_on) ?? 0) + signedAmount(t, mode));
-    }
-    return [...map.entries()]
-      .sort((a, b) => b[0].localeCompare(a[0]))
-      .map(([date, value]) => ({ key: date, label: `${Number(date.slice(8))}일`, value }));
-  }, [filtered, mode, curYear, curMonth]);
-
-  // 월별 — 올해
-  const monthly = useMemo(() => {
-    const map = new Map<string, number>();
-    for (const t of filtered) {
-      const [y, m] = t.occurred_on.split("-").map(Number);
-      if (y !== curYear) continue;
-      const key = `${y}-${String(m).padStart(2, "0")}`;
-      map.set(key, (map.get(key) ?? 0) + signedAmount(t, mode));
-    }
-    return [...map.entries()]
-      .sort((a, b) => b[0].localeCompare(a[0]))
-      .map(([k, value]) => ({ key: k, label: `${Number(k.slice(5))}월`, value }));
-  }, [filtered, mode, curYear]);
-
-  // 년도별
-  const yearly = useMemo(() => {
-    const map = new Map<string, number>();
+  const tree = useMemo<YearNode[]>(() => {
+    const years = new Map<string, Map<string, Map<string, number>>>();
     for (const t of filtered) {
       const y = t.occurred_on.slice(0, 4);
-      map.set(y, (map.get(y) ?? 0) + signedAmount(t, mode));
+      const m = t.occurred_on.slice(5, 7);
+      const d = t.occurred_on;
+      if (!years.has(y)) years.set(y, new Map());
+      const months = years.get(y)!;
+      if (!months.has(m)) months.set(m, new Map());
+      const days = months.get(m)!;
+      days.set(d, (days.get(d) ?? 0) + signedAmount(t, mode));
     }
-    return [...map.entries()]
+    return [...years.entries()]
       .sort((a, b) => b[0].localeCompare(a[0]))
-      .map(([k, value]) => ({ key: k, label: `${k}년`, value }));
+      .map(([y, months]) => {
+        const monthNodes: MonthNode[] = [...months.entries()]
+          .sort((a, b) => b[0].localeCompare(a[0]))
+          .map(([m, days]) => {
+            const dayNodes: DayNode[] = [...days.entries()]
+              .sort((a, b) => b[0].localeCompare(a[0]))
+              .map(([k, total]) => ({ key: k, day: Number(k.slice(8)), total }));
+            const mTotal = dayNodes.reduce((s, d) => s + d.total, 0);
+            return { key: `${y}-${m}`, month: Number(m), total: mTotal, days: dayNodes };
+          });
+        const yTotal = monthNodes.reduce((s, m) => s + m.total, 0);
+        return { key: y, year: Number(y), total: yTotal, months: monthNodes };
+      });
   }, [filtered, mode]);
 
+  const now = new Date();
+  const curYearKey = String(now.getFullYear());
+  const curMonthKey = `${curYearKey}-${String(now.getMonth() + 1).padStart(2, "0")}`;
+
+  const [openYears, setOpenYears] = useState<Record<string, boolean>>({ [curYearKey]: true });
+  const [openMonths, setOpenMonths] = useState<Record<string, boolean>>({ [curMonthKey]: true });
   const [selectedDay, setSelectedDay] = useState<string | null>(null);
 
-  const list = useMemo(() => {
-    const base = selectedDay
-      ? filtered.filter((t) => t.occurred_on === selectedDay)
-      : filtered;
-    return [...base].sort((a, b) => b.occurred_on.localeCompare(a.occurred_on));
+  const toggleYear = (k: string) =>
+    setOpenYears((s) => ({ ...s, [k]: !s[k] }));
+  const toggleMonth = (k: string) =>
+    setOpenMonths((s) => ({ ...s, [k]: !s[k] }));
+
+  const dayList = useMemo(() => {
+    if (!selectedDay) return [];
+    return filtered
+      .filter((t) => t.occurred_on === selectedDay)
+      .sort((a, b) => b.created_at.localeCompare(a.created_at));
   }, [filtered, selectedDay]);
 
-  const sign = (v: number) => (mode === "net" ? (v >= 0 ? "+" : "-") : mode === "savings" || mode === "investment" ? "" : "-");
+  const sign = (v: number) =>
+    mode === "net" ? (v >= 0 ? "+" : "-") : mode === "savings" || mode === "investment" ? "" : "-";
   const fmt = (v: number) => `${sign(v)}${formatKRW(Math.abs(v))}`;
 
   return (
@@ -116,7 +118,7 @@ export function StatDetailDialog({ open, onOpenChange, mode, title, txs }: Props
       <DialogContent className="max-w-md max-h-[85vh] overflow-hidden flex flex-col">
         <DialogHeader>
           <DialogTitle>{title}</DialogTitle>
-          <DialogDescription>합산 및 기간별 내역</DialogDescription>
+          <DialogDescription>년 · 월 · 일별 합산 내역</DialogDescription>
         </DialogHeader>
 
         <div className="rounded-2xl bg-accent/40 px-4 py-3">
@@ -129,144 +131,135 @@ export function StatDetailDialog({ open, onOpenChange, mode, title, txs }: Props
           </p>
         </div>
 
-        <Tabs defaultValue="daily" className="flex-1 flex flex-col min-h-0">
-          <TabsList className="grid grid-cols-3">
-            <TabsTrigger value="daily">일별</TabsTrigger>
-            <TabsTrigger value="monthly">월별</TabsTrigger>
-            <TabsTrigger value="yearly">년도별</TabsTrigger>
-          </TabsList>
-
-          <TabsContent value="daily" className="flex-1 min-h-0 mt-3 space-y-4">
-            <Buckets
-              items={daily}
-              mode={mode}
-              fmt={fmt}
-              emptyText="이번 달 기록이 없어요"
-              selectedKey={selectedDay}
-              onSelect={(k) => setSelectedDay((cur) => (cur === k ? null : k))}
-            />
-            <div className="pt-2 border-t">
-              <div className="flex items-center justify-between mb-2">
-                <p className="text-xs text-muted-foreground">
-                  {selectedDay ? `${Number(selectedDay.slice(8))}일 내역` : "전체 내역"}
-                </p>
-                {selectedDay && (
-                  <button
-                    type="button"
-                    onClick={() => setSelectedDay(null)}
-                    className="text-xs text-muted-foreground hover:text-foreground"
-                  >
-                    전체 보기
-                  </button>
-                )}
-              </div>
-              <ScrollArea className="h-[28vh] pr-2">
-                {list.length === 0 ? (
-                  <p className="text-center text-sm text-muted-foreground py-8">기록이 없어요</p>
-                ) : (
-                  <ul className="space-y-1">
-                    {list.map((t) => {
-                      const meta = TYPE_META[t.type];
-                      const v = signedAmount(t, mode);
-                      return (
-                        <li
-                          key={t.id}
-                          className="flex items-center gap-3 px-2 py-2 rounded-lg hover:bg-accent/40"
-                        >
-                          <div className="size-8 rounded-full bg-accent flex items-center justify-center text-sm">
-                            {meta.emoji}
-                          </div>
-                          <div className="flex-1 min-w-0">
-                            <p className="text-sm font-medium truncate">{t.category}</p>
-                            <p className="text-xs text-muted-foreground truncate">
-                              {t.memo || meta.label} · {t.occurred_on}
-                            </p>
-                          </div>
-                          <p
-                            className="text-sm font-semibold tabular-nums"
-                            style={{ color: tintFor(mode, v) }}
-                          >
-                            {fmt(v)}
-                          </p>
-                        </li>
-                      );
-                    })}
-                  </ul>
-                )}
-              </ScrollArea>
-            </div>
-          </TabsContent>
-          <TabsContent value="monthly" className="flex-1 min-h-0 mt-3">
-            <Buckets items={monthly} mode={mode} fmt={fmt} emptyText="올해 기록이 없어요" />
-          </TabsContent>
-          <TabsContent value="yearly" className="flex-1 min-h-0 mt-3">
-            <Buckets items={yearly} mode={mode} fmt={fmt} emptyText="기록이 없어요" />
-          </TabsContent>
-        </Tabs>
+        <ScrollArea className="flex-1 min-h-0 pr-2 -mr-2">
+          {tree.length === 0 ? (
+            <p className="text-center text-sm text-muted-foreground py-8">기록이 없어요</p>
+          ) : (
+            <ul className="space-y-1">
+              {tree.map((y) => {
+                const yOpen = !!openYears[y.key];
+                return (
+                  <li key={y.key}>
+                    <button
+                      type="button"
+                      onClick={() => toggleYear(y.key)}
+                      className="w-full flex items-center gap-2 px-2 py-2 rounded-lg hover:bg-accent/40 transition-colors"
+                    >
+                      <ChevronRight
+                        className={`size-4 text-muted-foreground transition-transform ${yOpen ? "rotate-90" : ""}`}
+                      />
+                      <span className="text-sm font-medium flex-1 text-left">{y.year}년</span>
+                      <span
+                        className="text-sm font-semibold tabular-nums"
+                        style={{ color: tintFor(mode, y.total) }}
+                      >
+                        {fmt(y.total)}
+                      </span>
+                    </button>
+                    {yOpen && (
+                      <ul className="pl-5 space-y-1 mt-1">
+                        {y.months.map((m) => {
+                          const mOpen = !!openMonths[m.key];
+                          return (
+                            <li key={m.key}>
+                              <button
+                                type="button"
+                                onClick={() => toggleMonth(m.key)}
+                                className="w-full flex items-center gap-2 px-2 py-1.5 rounded-lg hover:bg-accent/40 transition-colors"
+                              >
+                                <ChevronRight
+                                  className={`size-3.5 text-muted-foreground transition-transform ${mOpen ? "rotate-90" : ""}`}
+                                />
+                                <span className="text-sm flex-1 text-left">{m.month}월</span>
+                                <span
+                                  className="text-sm tabular-nums"
+                                  style={{ color: tintFor(mode, m.total) }}
+                                >
+                                  {fmt(m.total)}
+                                </span>
+                              </button>
+                              {mOpen && (
+                                <ul className="pl-6 space-y-0.5 mt-0.5">
+                                  {m.days.map((d) => {
+                                    const isSel = selectedDay === d.key;
+                                    return (
+                                      <li key={d.key}>
+                                        <button
+                                          type="button"
+                                          onClick={() =>
+                                            setSelectedDay((cur) => (cur === d.key ? null : d.key))
+                                          }
+                                          className={`w-full flex items-center gap-2 px-2 py-1.5 rounded-lg transition-colors ${
+                                            isSel
+                                              ? "bg-accent/60 ring-1 ring-border"
+                                              : "hover:bg-accent/40"
+                                          }`}
+                                        >
+                                          <span className="text-xs text-muted-foreground flex-1 text-left">
+                                            {d.day}일
+                                          </span>
+                                          <span
+                                            className="text-xs tabular-nums"
+                                            style={{ color: tintFor(mode, d.total) }}
+                                          >
+                                            {fmt(d.total)}
+                                          </span>
+                                        </button>
+                                        {isSel && (
+                                          <ul className="ml-2 my-1 space-y-1 border-l pl-3">
+                                            {dayList.length === 0 ? (
+                                              <li className="text-xs text-muted-foreground py-1">
+                                                기록이 없어요
+                                              </li>
+                                            ) : (
+                                              dayList.map((t) => {
+                                                const meta = TYPE_META[t.type];
+                                                const v = signedAmount(t, mode);
+                                                return (
+                                                  <li
+                                                    key={t.id}
+                                                    className="flex items-center gap-2 px-1 py-1.5 rounded-md"
+                                                  >
+                                                    <div className="size-7 rounded-full bg-accent flex items-center justify-center text-xs">
+                                                      {meta.emoji}
+                                                    </div>
+                                                    <div className="flex-1 min-w-0">
+                                                      <p className="text-xs font-medium truncate">
+                                                        {t.category}
+                                                      </p>
+                                                      <p className="text-[11px] text-muted-foreground truncate">
+                                                        {t.memo || meta.label}
+                                                      </p>
+                                                    </div>
+                                                    <p
+                                                      className="text-xs font-semibold tabular-nums"
+                                                      style={{ color: tintFor(mode, v) }}
+                                                    >
+                                                      {fmt(v)}
+                                                    </p>
+                                                  </li>
+                                                );
+                                              })
+                                            )}
+                                          </ul>
+                                        )}
+                                      </li>
+                                    );
+                                  })}
+                                </ul>
+                              )}
+                            </li>
+                          );
+                        })}
+                      </ul>
+                    )}
+                  </li>
+                );
+              })}
+            </ul>
+          )}
+        </ScrollArea>
       </DialogContent>
     </Dialog>
-  );
-}
-
-function Buckets({
-  items,
-  mode,
-  fmt,
-  emptyText,
-  selectedKey,
-  onSelect,
-}: {
-  items: { key: string; label: string; value: number }[];
-  mode: StatMode;
-  fmt: (v: number) => string;
-  emptyText: string;
-  selectedKey?: string | null;
-  onSelect?: (key: string) => void;
-}) {
-  if (items.length === 0) {
-    return <p className="text-center text-sm text-muted-foreground py-8">{emptyText}</p>;
-  }
-  const max = Math.max(...items.map((i) => Math.abs(i.value)), 1);
-  const clickable = !!onSelect;
-  return (
-    <ScrollArea className="h-[42vh] pr-2">
-      <ul className="space-y-2">
-        {items.map((i) => {
-          const isSelected = selectedKey === i.key;
-          const Tag: any = clickable ? "button" : "div";
-          return (
-            <li key={i.key}>
-              <Tag
-                {...(clickable
-                  ? { type: "button", onClick: () => onSelect?.(i.key) }
-                  : {})}
-                className={`w-full text-left space-y-1 rounded-lg px-2 py-1.5 transition-colors ${
-                  clickable ? "hover:bg-accent/40" : ""
-                } ${isSelected ? "bg-accent/60 ring-1 ring-border" : ""}`}
-              >
-                <div className="flex items-baseline justify-between text-sm">
-                  <span className="text-muted-foreground">{i.label}</span>
-                  <span
-                    className="font-semibold tabular-nums"
-                    style={{ color: tintFor(mode, i.value) }}
-                  >
-                    {fmt(i.value)}
-                  </span>
-                </div>
-                <div className="h-1.5 rounded-full bg-accent/60 overflow-hidden">
-                  <div
-                    className="h-full rounded-full transition-all duration-500"
-                    style={{
-                      width: `${(Math.abs(i.value) / max) * 100}%`,
-                      background: tintFor(mode, i.value),
-                    }}
-                  />
-                </div>
-              </Tag>
-            </li>
-          );
-        })}
-      </ul>
-    </ScrollArea>
   );
 }
