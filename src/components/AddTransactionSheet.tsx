@@ -85,7 +85,7 @@ export function AddTransactionSheet({ trigger, transaction, open: openProp, onOp
       setDate(transaction.occurred_on);
     } else {
       // always default new entries to today
-      setDate(new Date().toISOString().slice(0, 10));
+      setDate(todayLocal());
     }
   }, [open, transaction]);
 
@@ -94,7 +94,7 @@ export function AddTransactionSheet({ trigger, transaction, open: openProp, onOp
     setCategory(CATEGORIES.expense[0]);
     setAmount("");
     setMemo("");
-    setDate(new Date().toISOString().slice(0, 10));
+    setDate(todayLocal());
   };
 
   const submit = async (e: React.FormEvent) => {
