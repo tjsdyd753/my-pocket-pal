@@ -99,10 +99,14 @@ export function StatDetailDialog({ open, onOpenChange, mode, title, txs }: Props
       .map(([k, value]) => ({ key: k, label: `${k}년`, value }));
   }, [filtered, mode]);
 
-  const list = useMemo(
-    () => [...filtered].sort((a, b) => b.occurred_on.localeCompare(a.occurred_on)),
-    [filtered]
-  );
+  const [selectedDay, setSelectedDay] = useState<string | null>(null);
+
+  const list = useMemo(() => {
+    const base = selectedDay
+      ? filtered.filter((t) => t.occurred_on === selectedDay)
+      : filtered;
+    return [...base].sort((a, b) => b.occurred_on.localeCompare(a.occurred_on));
+  }, [filtered, selectedDay]);
 
   const sign = (v: number) => (mode === "net" ? (v >= 0 ? "+" : "-") : mode === "savings" || mode === "investment" ? "" : "-");
   const fmt = (v: number) => `${sign(v)}${formatKRW(Math.abs(v))}`;
