@@ -70,16 +70,6 @@ function Dashboard() {
             />
           </div>
           <p className="text-4xl font-semibold tracking-tight mt-2">{formatKRW(stats.netAsset)}</p>
-          <div className="flex gap-6 mt-5 text-xs">
-            <div>
-              <p className="text-muted-foreground">이번 달 수입</p>
-              <p className="text-[color:var(--income)] font-medium mt-0.5">+{formatKRW(stats.monthIncome)}</p>
-            </div>
-            <div>
-              <p className="text-muted-foreground">이번 달 지출</p>
-              <p className="text-[color:var(--expense)] font-medium mt-0.5">-{formatKRW(stats.monthSpend)}</p>
-            </div>
-          </div>
         </button>
       </section>
 
