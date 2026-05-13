@@ -119,72 +119,34 @@ function Dashboard() {
 
       {/* Charts */}
       <section className="px-6 mt-6 space-y-3">
-        <div className="glass-card p-5">
-          <h3 className="text-sm font-medium mb-1">월별 자산 흐름</h3>
-          <p className="text-xs text-muted-foreground mb-4">최근 6개월 누적 순자산</p>
-          <div className="h-48">
-            {stats.monthlySeries.length > 0 ? (
-              <ResponsiveContainer width="100%" height="100%">
-                <AreaChart data={stats.monthlySeries}>
-                  <defs>
-                    <linearGradient id="g1" x1="0" y1="0" x2="0" y2="1">
-                      <stop offset="0%" stopColor="var(--color-primary)" stopOpacity={0.4} />
-                      <stop offset="100%" stopColor="var(--color-primary)" stopOpacity={0} />
-                    </linearGradient>
-                  </defs>
-                  <CartesianGrid strokeDasharray="3 3" stroke="var(--color-border)" vertical={false} />
-                  <XAxis dataKey="label" tick={{ fill: "var(--color-muted-foreground)", fontSize: 11 }} axisLine={false} tickLine={false} />
-                  <YAxis hide />
-                  <Tooltip
-                    contentStyle={{
-                      background: "var(--color-popover)",
-                      border: "1px solid var(--color-border)",
-                      borderRadius: 12,
-                      fontSize: 12,
-                    }}
-                    formatter={(v: number) => formatKRW(v)}
-                  />
-                  <Area
-                    type="monotone"
-                    dataKey="net"
-                    stroke="var(--color-primary)"
-                    strokeWidth={2}
-                    fill="url(#g1)"
-                    isAnimationActive
-                    animationDuration={700}
-                    animationEasing="ease-out"
-                  />
-                </AreaChart>
-              </ResponsiveContainer>
-            ) : (
-              <EmptyChart />
-            )}
-          </div>
-        </div>
-
-        <div className="glass-card p-5">
-          <h3 className="text-sm font-medium mb-1">이번 달 소비 비율</h3>
-          <p className="text-xs text-muted-foreground mb-4">카테고리별 지출</p>
-          <div className="h-52 flex items-center">
-            {stats.categoryPie.length > 0 ? (
-              <>
-                <ResponsiveContainer width="55%" height="100%">
-                  <PieChart>
-                    <Pie
-                      data={stats.categoryPie}
-                      dataKey="value"
-                      innerRadius={45}
-                      outerRadius={75}
-                      paddingAngle={2}
-                      stroke="none"
-                      isAnimationActive
-                      animationDuration={600}
-                      animationEasing="ease-out"
-                    >
-                      {stats.categoryPie.map((_, i) => (
-                        <Cell key={i} fill={pieColor(i)} />
-                      ))}
-                    </Pie>
+        <div className="glass-card overflow-hidden">
+          <button
+            type="button"
+            onClick={() => setFlowOpen((v) => !v)}
+            className="w-full flex items-center justify-between p-5 text-left hover:bg-accent/30 transition-colors"
+          >
+            <div>
+              <h3 className="text-sm font-medium">월별 자산 흐름</h3>
+              <p className="text-xs text-muted-foreground mt-0.5">최근 6개월 누적 순자산</p>
+            </div>
+            <ChevronDown
+              className={`size-4 text-muted-foreground transition-transform ${flowOpen ? "rotate-180" : ""}`}
+            />
+          </button>
+          {flowOpen && (
+            <div className="px-5 pb-5 h-48 animate-fade-in">
+              {stats.monthlySeries.length > 0 ? (
+                <ResponsiveContainer width="100%" height="100%">
+                  <AreaChart data={stats.monthlySeries}>
+                    <defs>
+                      <linearGradient id="g1" x1="0" y1="0" x2="0" y2="1">
+                        <stop offset="0%" stopColor="var(--color-primary)" stopOpacity={0.4} />
+                        <stop offset="100%" stopColor="var(--color-primary)" stopOpacity={0} />
+                      </linearGradient>
+                    </defs>
+                    <CartesianGrid strokeDasharray="3 3" stroke="var(--color-border)" vertical={false} />
+                    <XAxis dataKey="label" tick={{ fill: "var(--color-muted-foreground)", fontSize: 11 }} axisLine={false} tickLine={false} />
+                    <YAxis hide />
                     <Tooltip
                       contentStyle={{
                         background: "var(--color-popover)",
@@ -194,28 +156,92 @@ function Dashboard() {
                       }}
                       formatter={(v: number) => formatKRW(v)}
                     />
-                  </PieChart>
+                    <Area
+                      type="monotone"
+                      dataKey="net"
+                      stroke="var(--color-primary)"
+                      strokeWidth={2}
+                      fill="url(#g1)"
+                      isAnimationActive
+                      animationDuration={700}
+                      animationEasing="ease-out"
+                    />
+                  </AreaChart>
                 </ResponsiveContainer>
-                <ul
-                  key={stats.categoryPie.map((c) => `${c.name}:${c.value}`).join("|")}
-                  className="flex-1 space-y-1.5 text-xs animate-fade-in"
-                >
-                  {stats.categoryPie.slice(0, 6).map((c, i) => (
-                    <li
-                      key={c.name}
-                      className="flex items-center gap-2 transition-colors duration-300"
-                    >
-                      <span className="size-2 rounded-full" style={{ background: pieColor(i) }} />
-                      <span className="text-muted-foreground flex-1 truncate">{c.name}</span>
-                      <span className="font-medium tabular-nums">{Math.round((c.value / stats.monthSpend) * 100) || 0}%</span>
-                    </li>
-                  ))}
-                </ul>
-              </>
-            ) : (
-              <EmptyChart />
-            )}
-          </div>
+              ) : (
+                <EmptyChart />
+              )}
+            </div>
+          )}
+        </div>
+
+        <div className="glass-card overflow-hidden">
+          <button
+            type="button"
+            onClick={() => setPieOpen((v) => !v)}
+            className="w-full flex items-center justify-between p-5 text-left hover:bg-accent/30 transition-colors"
+          >
+            <div>
+              <h3 className="text-sm font-medium">이번 달 소비 비율</h3>
+              <p className="text-xs text-muted-foreground mt-0.5">카테고리별 지출</p>
+            </div>
+            <ChevronDown
+              className={`size-4 text-muted-foreground transition-transform ${pieOpen ? "rotate-180" : ""}`}
+            />
+          </button>
+          {pieOpen && (
+            <div className="px-5 pb-5 h-52 flex items-center animate-fade-in">
+              {stats.categoryPie.length > 0 ? (
+                <>
+                  <ResponsiveContainer width="55%" height="100%">
+                    <PieChart>
+                      <Pie
+                        data={stats.categoryPie}
+                        dataKey="value"
+                        innerRadius={45}
+                        outerRadius={75}
+                        paddingAngle={2}
+                        stroke="none"
+                        isAnimationActive
+                        animationDuration={600}
+                        animationEasing="ease-out"
+                      >
+                        {stats.categoryPie.map((_, i) => (
+                          <Cell key={i} fill={pieColor(i)} />
+                        ))}
+                      </Pie>
+                      <Tooltip
+                        contentStyle={{
+                          background: "var(--color-popover)",
+                          border: "1px solid var(--color-border)",
+                          borderRadius: 12,
+                          fontSize: 12,
+                        }}
+                        formatter={(v: number) => formatKRW(v)}
+                      />
+                    </PieChart>
+                  </ResponsiveContainer>
+                  <ul
+                    key={stats.categoryPie.map((c) => `${c.name}:${c.value}`).join("|")}
+                    className="flex-1 space-y-1.5 text-xs animate-fade-in"
+                  >
+                    {stats.categoryPie.slice(0, 6).map((c, i) => (
+                      <li
+                        key={c.name}
+                        className="flex items-center gap-2 transition-colors duration-300"
+                      >
+                        <span className="size-2 rounded-full" style={{ background: pieColor(i) }} />
+                        <span className="text-muted-foreground flex-1 truncate">{c.name}</span>
+                        <span className="font-medium tabular-nums">{Math.round((c.value / stats.monthSpend) * 100) || 0}%</span>
+                      </li>
+                    ))}
+                  </ul>
+                </>
+              ) : (
+                <EmptyChart />
+              )}
+            </div>
+          )}
         </div>
       </section>
 
