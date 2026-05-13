@@ -113,7 +113,13 @@ function Dashboard() {
 
       {/* Calendar (full width) */}
       <section className="mt-4">
-        <DailyCalendar txs={txs} />
+        <DailyCalendar
+          txs={txs}
+          selected={calSelected}
+          onSelectedChange={setCalSelected}
+          month={calMonth}
+          onMonthChange={setCalMonth}
+        />
       </section>
 
       {/* Charts */}
