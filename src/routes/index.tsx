@@ -118,6 +118,11 @@ function Dashboard() {
         </section>
       )}
 
+      {/* Calendar (full width) */}
+      <section className="mt-4">
+        <DailyCalendar txs={txs} />
+      </section>
+
       {/* Charts */}
       <section className="px-6 mt-6 space-y-3">
         <div className="glass-card overflow-hidden">
