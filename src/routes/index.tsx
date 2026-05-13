@@ -251,21 +251,31 @@ function Dashboard() {
         </div>
       </section>
 
-      {/* Calendar */}
-      <section className="px-6 mt-3">
-        <DailyCalendar txs={txs} />
-      </section>
+      {/* Calendar moved above */}
 
-      {/* Recent */}
+      {/* Recent (accordion) */}
       <section className="px-6 mt-6">
-        <h3 className="text-sm font-medium mb-3">최근 내역</h3>
-        <div className="glass-card divide-y divide-border">
-          {isLoading ? (
-            <p className="p-6 text-center text-sm text-muted-foreground">불러오는 중...</p>
-          ) : txs.length === 0 ? (
-            <p className="p-8 text-center text-sm text-muted-foreground">아직 기록이 없어요. + 버튼으로 추가해보세요.</p>
-          ) : (
-            txs.slice(0, 8).map((t) => <TxRow key={t.id} tx={t} />)
+        <div className="glass-card overflow-hidden">
+          <button
+            type="button"
+            onClick={() => setRecentOpen((v) => !v)}
+            className="w-full flex items-center justify-between p-5 text-left hover:bg-accent/30 transition-colors"
+          >
+            <h3 className="text-sm font-medium">최근 내역</h3>
+            <ChevronDown
+              className={`size-4 text-muted-foreground transition-transform ${recentOpen ? "rotate-180" : ""}`}
+            />
+          </button>
+          {recentOpen && (
+            <div className="divide-y divide-border border-t border-border animate-fade-in">
+              {isLoading ? (
+                <p className="p-6 text-center text-sm text-muted-foreground">불러오는 중...</p>
+              ) : txs.length === 0 ? (
+                <p className="p-8 text-center text-sm text-muted-foreground">아직 기록이 없어요. + 버튼으로 추가해보세요.</p>
+              ) : (
+                txs.slice(0, 8).map((t) => <TxRow key={t.id} tx={t} />)
+              )}
+            </div>
           )}
         </div>
       </section>
