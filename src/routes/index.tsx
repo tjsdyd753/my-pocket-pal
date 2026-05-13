@@ -31,6 +31,9 @@ function Dashboard() {
   const [flowOpen, setFlowOpen] = useState(false);
   const [pieOpen, setPieOpen] = useState(false);
   const [recentOpen, setRecentOpen] = useState(false);
+  const [calSelected, setCalSelected] = useState<Date>(() => new Date());
+  const [calMonth, setCalMonth] = useState<Date>(() => new Date());
+  const calSelectedKey = `${calSelected.getFullYear()}-${String(calSelected.getMonth() + 1).padStart(2, "0")}-${String(calSelected.getDate()).padStart(2, "0")}`;
 
   if (loading || !user) {
     return <div className="min-h-screen flex items-center justify-center text-muted-foreground">로딩중...</div>;
@@ -67,16 +70,6 @@ function Dashboard() {
             />
           </div>
           <p className="text-4xl font-semibold tracking-tight mt-2">{formatKRW(stats.netAsset)}</p>
-          <div className="flex gap-6 mt-5 text-xs">
-            <div>
-              <p className="text-muted-foreground">이번 달 수입</p>
-              <p className="text-[color:var(--income)] font-medium mt-0.5">+{formatKRW(stats.monthIncome)}</p>
-            </div>
-            <div>
-              <p className="text-muted-foreground">이번 달 지출</p>
-              <p className="text-[color:var(--expense)] font-medium mt-0.5">-{formatKRW(stats.monthSpend)}</p>
-            </div>
-          </div>
         </button>
       </section>
 
@@ -120,7 +113,13 @@ function Dashboard() {
 
       {/* Calendar (full width) */}
       <section className="mt-4">
-        <DailyCalendar txs={txs} />
+        <DailyCalendar
+          txs={txs}
+          selected={calSelected}
+          onSelectedChange={setCalSelected}
+          month={calMonth}
+          onMonthChange={setCalMonth}
+        />
       </section>
 
       {/* Charts */}
@@ -282,7 +281,7 @@ function Dashboard() {
 
       {/* FAB */}
       <div className="fixed bottom-6 right-6 z-40">
-        <AddTransactionSheet />
+        <AddTransactionSheet defaultDate={calSelectedKey} />
       </div>
     </div>
   );
