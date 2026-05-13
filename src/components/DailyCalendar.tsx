@@ -8,10 +8,15 @@ import { cn } from "@/lib/utils";
 const toKey = (d: Date) =>
   `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
 
-export function DailyCalendar({ txs }: { txs: Transaction[] }) {
-  const [selected, setSelected] = useState<Date>(new Date());
-  const [month, setMonth] = useState<Date>(new Date());
+type Props = {
+  txs: Transaction[];
+  selected: Date;
+  onSelectedChange: (d: Date) => void;
+  month: Date;
+  onMonthChange: (d: Date) => void;
+};
 
+export function DailyCalendar({ txs, selected, onSelectedChange, month, onMonthChange }: Props) {
   const byDay = useMemo(() => {
     const map = new Map<string, Transaction[]>();
     for (const t of txs) {
@@ -36,6 +41,19 @@ export function DailyCalendar({ txs }: { txs: Transaction[] }) {
     return map;
   }, [byDay]);
 
+  // Totals for the currently viewed month
+  const monthTotals = useMemo(() => {
+    const ym = `${month.getFullYear()}-${String(month.getMonth() + 1).padStart(2, "0")}`;
+    let income = 0, out = 0;
+    for (const t of txs) {
+      if (!t.occurred_on.startsWith(ym)) continue;
+      const a = Number(t.amount);
+      if (t.type === "income") income += a;
+      else if (t.type === "expense" || t.type === "fixed_cost") out += a;
+    }
+    return { income, out };
+  }, [txs, month]);
+
   const key = toKey(selected);
   const dayTxs = byDay.get(key) ?? [];
   const dayTotal = totals.get(key);
@@ -56,13 +74,29 @@ export function DailyCalendar({ txs }: { txs: Transaction[] }) {
         <p className="text-xs text-muted-foreground">날짜를 선택하세요</p>
       </div>
 
+      {/* Month income/expense summary */}
+      <div className="grid grid-cols-2 gap-2 mb-4">
+        <div className="rounded-xl bg-accent/40 px-3 py-2.5">
+          <p className="text-[11px] text-muted-foreground">{month.getMonth() + 1}월 수입</p>
+          <p className="text-sm font-semibold tabular-nums text-[color:var(--income)] mt-0.5">
+            +{formatKRW(monthTotals.income)}
+          </p>
+        </div>
+        <div className="rounded-xl bg-accent/40 px-3 py-2.5">
+          <p className="text-[11px] text-muted-foreground">{month.getMonth() + 1}월 지출</p>
+          <p className="text-sm font-semibold tabular-nums text-[color:var(--expense)] mt-0.5">
+            -{formatKRW(monthTotals.out)}
+          </p>
+        </div>
+      </div>
+
       <div className="w-full">
         <Calendar
           mode="single"
           selected={selected}
-          onSelect={(d) => d && setSelected(d)}
+          onSelect={(d) => d && onSelectedChange(d)}
           month={month}
-          onMonthChange={setMonth}
+          onMonthChange={onMonthChange}
           showOutsideDays
           modifiers={{ income: incomeDays, out: outDays }}
           modifiersClassNames={{
