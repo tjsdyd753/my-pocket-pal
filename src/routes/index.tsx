@@ -410,8 +410,11 @@ function computeStats(txs: Transaction[]) {
     .map(([name, value]) => ({ name, value }))
     .sort((a, b) => b.value - a.value);
 
+  const totalNet = totalIncome - totalSpend - totalFixed;
+
   return {
     netAsset, monthIncome, monthSpend, monthFixed, monthNet,
+    totalSpend, totalFixed, totalNet,
     totalSavings, totalInvestment,
     monthlySeries, categoryPie,
   };
