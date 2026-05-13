@@ -50,12 +50,21 @@ function Dashboard() {
 
       {/* Total Asset Hero */}
       <section className="px-6">
-        <div className="glass-card p-7 relative overflow-hidden">
+        <button
+          type="button"
+          onClick={() => setStatsOpen((v) => !v)}
+          className="w-full text-left glass-card p-7 relative overflow-hidden transition-transform active:scale-[0.99]"
+        >
           <div
             className="absolute -top-20 -right-20 size-60 rounded-full opacity-30 blur-3xl"
             style={{ background: "var(--gradient-primary)" }}
           />
-          <p className="text-sm text-muted-foreground">총 자산</p>
+          <div className="flex items-center justify-between">
+            <p className="text-sm text-muted-foreground">총 자산</p>
+            <ChevronDown
+              className={`size-4 text-muted-foreground transition-transform ${statsOpen ? "rotate-180" : ""}`}
+            />
+          </div>
           <p className="text-4xl font-semibold tracking-tight mt-2">{formatKRW(stats.netAsset)}</p>
           <div className="flex gap-6 mt-5 text-xs">
             <div>
@@ -67,44 +76,46 @@ function Dashboard() {
               <p className="text-[color:var(--expense)] font-medium mt-0.5">-{formatKRW(stats.monthSpend)}</p>
             </div>
           </div>
-        </div>
+        </button>
       </section>
 
-      {/* Quick stats */}
-      <section className="px-6 mt-4 grid grid-cols-2 gap-3">
-        <StatCard
-          icon={<TrendingDown className="size-4" />}
-          label="이번 달 소비"
-          value={formatKRW(stats.monthSpend + stats.monthFixed)}
-          tint="var(--expense)"
-          mode="spend"
-          txs={txs}
-        />
-        <StatCard
-          icon={<PiggyBank className="size-4" />}
-          label="총 적금"
-          value={formatKRW(stats.totalSavings)}
-          tint="var(--savings)"
-          mode="savings"
-          txs={txs}
-        />
-        <StatCard
-          icon={<LineIcon className="size-4" />}
-          label="총 투자"
-          value={formatKRW(stats.totalInvestment)}
-          tint="var(--investment)"
-          mode="investment"
-          txs={txs}
-        />
-        <StatCard
-          icon={<TrendingUp className="size-4" />}
-          label="이번 달 순익"
-          value={formatKRW(stats.monthNet)}
-          tint={stats.monthNet >= 0 ? "var(--income)" : "var(--expense)"}
-          mode="net"
-          txs={txs}
-        />
-      </section>
+      {/* Quick stats (accordion under 총 자산) */}
+      {statsOpen && (
+        <section className="px-6 mt-4 grid grid-cols-2 gap-3 animate-fade-in">
+          <StatCard
+            icon={<TrendingDown className="size-4" />}
+            label="총 소비"
+            value={formatKRW(stats.totalSpend + stats.totalFixed)}
+            tint="var(--expense)"
+            mode="spend"
+            txs={txs}
+          />
+          <StatCard
+            icon={<PiggyBank className="size-4" />}
+            label="총 적금"
+            value={formatKRW(stats.totalSavings)}
+            tint="var(--savings)"
+            mode="savings"
+            txs={txs}
+          />
+          <StatCard
+            icon={<LineIcon className="size-4" />}
+            label="총 투자"
+            value={formatKRW(stats.totalInvestment)}
+            tint="var(--investment)"
+            mode="investment"
+            txs={txs}
+          />
+          <StatCard
+            icon={<TrendingUp className="size-4" />}
+            label="총 순익"
+            value={formatKRW(stats.totalNet)}
+            tint={stats.totalNet >= 0 ? "var(--income)" : "var(--expense)"}
+            mode="net"
+            txs={txs}
+          />
+        </section>
+      )}
 
       {/* Charts */}
       <section className="px-6 mt-6 space-y-3">
