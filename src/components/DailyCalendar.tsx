@@ -56,7 +56,7 @@ export function DailyCalendar({ txs }: { txs: Transaction[] }) {
         <p className="text-xs text-muted-foreground">날짜를 선택하세요</p>
       </div>
 
-      <div className="flex justify-center">
+      <div className="w-full">
         <Calendar
           mode="single"
           selected={selected}
@@ -69,7 +69,7 @@ export function DailyCalendar({ txs }: { txs: Transaction[] }) {
             income: "after:absolute after:bottom-1 after:left-1/2 after:-translate-x-1/2 after:size-1 after:rounded-full after:bg-[color:var(--income)]",
             out: "before:absolute before:bottom-1 before:left-[calc(50%-6px)] before:size-1 before:rounded-full before:bg-[color:var(--expense)]",
           }}
-          className={cn("p-0 pointer-events-auto")}
+          className={cn("p-0 w-full pointer-events-auto [&_table]:w-full [&_.rdp-month]:w-full [&_.rdp-cell]:w-[14.2857%] [&_.rdp-head_cell]:w-[14.2857%] [&_.rdp-day]:w-full")}
         />
       </div>
 
