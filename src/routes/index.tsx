@@ -7,7 +7,7 @@ import { AddTransactionSheet } from "@/components/AddTransactionSheet";
 import { DailyCalendar } from "@/components/DailyCalendar";
 import { StatDetailDialog, type StatMode } from "@/components/StatDetailDialog";
 import { Button } from "@/components/ui/button";
-import { LogOut, TrendingUp, TrendingDown, PiggyBank, LineChart as LineIcon } from "lucide-react";
+import { LogOut, TrendingUp, TrendingDown, PiggyBank, LineChart as LineIcon, ChevronDown } from "lucide-react";
 import {
   PieChart, Pie, Cell, ResponsiveContainer, Tooltip,
   AreaChart, Area, XAxis, YAxis, CartesianGrid,
