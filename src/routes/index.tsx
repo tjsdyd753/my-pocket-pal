@@ -31,6 +31,9 @@ function Dashboard() {
   const [flowOpen, setFlowOpen] = useState(false);
   const [pieOpen, setPieOpen] = useState(false);
   const [recentOpen, setRecentOpen] = useState(false);
+  const [calSelected, setCalSelected] = useState<Date>(() => new Date());
+  const [calMonth, setCalMonth] = useState<Date>(() => new Date());
+  const calSelectedKey = `${calSelected.getFullYear()}-${String(calSelected.getMonth() + 1).padStart(2, "0")}-${String(calSelected.getDate()).padStart(2, "0")}`;
 
   if (loading || !user) {
     return <div className="min-h-screen flex items-center justify-center text-muted-foreground">로딩중...</div>;
