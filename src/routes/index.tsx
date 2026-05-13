@@ -28,8 +28,9 @@ function Dashboard() {
 
   const stats = useMemo(() => computeStats(txs), [txs]);
   const [statsOpen, setStatsOpen] = useState(false);
-  const [flowOpen, setFlowOpen] = useState(true);
-  const [pieOpen, setPieOpen] = useState(true);
+  const [flowOpen, setFlowOpen] = useState(false);
+  const [pieOpen, setPieOpen] = useState(false);
+  const [recentOpen, setRecentOpen] = useState(false);
 
   if (loading || !user) {
     return <div className="min-h-screen flex items-center justify-center text-muted-foreground">로딩중...</div>;
