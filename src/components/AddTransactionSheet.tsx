@@ -54,9 +54,10 @@ type Props = {
   transaction?: Transaction;
   open?: boolean;
   onOpenChange?: (open: boolean) => void;
+  defaultDate?: string;
 };
 
-export function AddTransactionSheet({ trigger, transaction, open: openProp, onOpenChange }: Props) {
+export function AddTransactionSheet({ trigger, transaction, open: openProp, onOpenChange, defaultDate }: Props) {
   const { user } = useAuth();
   const qc = useQueryClient();
   const [openInternal, setOpenInternal] = useState(false);
