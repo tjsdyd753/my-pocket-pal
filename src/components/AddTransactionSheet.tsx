@@ -72,7 +72,7 @@ export function AddTransactionSheet({ trigger, transaction, open: openProp, onOp
   const [category, setCategory] = useState(transaction?.category ?? CATEGORIES.expense[0]);
   const [amount, setAmount] = useState(transaction ? String(transaction.amount) : "");
   const [memo, setMemo] = useState(transaction?.memo ?? "");
-  const [date, setDate] = useState(transaction?.occurred_on ?? todayLocal());
+  const [date, setDate] = useState(transaction?.occurred_on ?? defaultDate ?? todayLocal());
   const [busy, setBusy] = useState(false);
 
   // re-sync when opening
@@ -85,10 +85,9 @@ export function AddTransactionSheet({ trigger, transaction, open: openProp, onOp
       setMemo(transaction.memo ?? "");
       setDate(transaction.occurred_on);
     } else {
-      // always default new entries to today
-      setDate(todayLocal());
+      setDate(defaultDate ?? todayLocal());
     }
-  }, [open, transaction]);
+  }, [open, transaction, defaultDate]);
 
   const reset = () => {
     setType("expense");
