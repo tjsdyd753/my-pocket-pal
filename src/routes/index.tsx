@@ -27,6 +27,27 @@ function Dashboard() {
   const [statsOpen, setStatsOpen] = useState(false);
   const [flowOpen, setFlowOpen] = useState(false);
   const [pieOpen, setPieOpen] = useState(false);
+  const [pieScope, setPieScope] = useState<"year" | "month">("month");
+  const now = new Date();
+  const [pieYear, setPieYear] = useState<number>(now.getFullYear());
+  const [pieMonth, setPieMonth] = useState<number>(now.getMonth() + 1);
+  const pieData = useMemo(() => {
+    const map = new Map<string, number>();
+    for (const t of txs) {
+      if (t.type !== "expense" && t.type !== "fixed_cost") continue;
+      const [y, m] = t.occurred_on.split("-");
+      if (Number(y) !== pieYear) continue;
+      if (pieScope === "month" && Number(m) !== pieMonth) continue;
+      map.set(t.category, (map.get(t.category) ?? 0) + Number(t.amount));
+    }
+    return [...map.entries()].map(([name, value]) => ({ name, value })).sort((a, b) => b.value - a.value);
+  }, [txs, pieScope, pieYear, pieMonth]);
+  const pieTotal = pieData.reduce((s, c) => s + c.value, 0);
+  const yearOptions = useMemo(() => {
+    const ys = new Set<number>([now.getFullYear()]);
+    for (const t of txs) ys.add(Number(t.occurred_on.slice(0, 4)));
+    return [...ys].sort((a, b) => b - a);
+  }, [txs]);
   const [recentOpen, setRecentOpen] = useState(false);
   const [calSelected, setCalSelected] = useState<Date>(() => new Date());
   const [calMonth, setCalMonth] = useState<Date>(() => new Date());
