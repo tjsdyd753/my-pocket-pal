@@ -25,7 +25,7 @@ function Dashboard() {
 
   const stats = useMemo(() => computeStats(txs), [txs]);
   const [statsOpen, setStatsOpen] = useState(false);
-  const [flowOpen, setFlowOpen] = useState(false);
+  
   const [pieOpen, setPieOpen] = useState(false);
   const [pieScope, setPieScope] = useState<"year" | "month">("month");
   const now = new Date();
