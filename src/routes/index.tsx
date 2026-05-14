@@ -103,11 +103,11 @@ function Dashboard() {
             txs={txs}
           />
           <StatCard
-            icon={<PiggyBank className="size-4" />}
-            label="총 적금"
-            value={formatKRW(stats.totalSavings)}
-            tint="var(--savings)"
-            mode="savings"
+            icon={<TrendingUp className="size-4" />}
+            label="총 순익"
+            value={formatKRW(stats.totalNet)}
+            tint={stats.totalNet >= 0 ? "var(--income)" : "var(--expense)"}
+            mode="net"
             txs={txs}
           />
           <StatCard
@@ -119,11 +119,11 @@ function Dashboard() {
             txs={txs}
           />
           <StatCard
-            icon={<TrendingUp className="size-4" />}
-            label="총 순익"
-            value={formatKRW(stats.totalNet)}
-            tint={stats.totalNet >= 0 ? "var(--income)" : "var(--expense)"}
-            mode="net"
+            icon={<PiggyBank className="size-4" />}
+            label="총 적금"
+            value={formatKRW(stats.totalSavings)}
+            tint="var(--savings)"
+            mode="savings"
             txs={txs}
           />
         </section>
